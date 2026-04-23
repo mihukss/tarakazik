@@ -374,6 +374,57 @@
     font-size: 14px;
   }
 
+  /* Deposit success toast */
+  .deposit-toast {
+    position: fixed;
+    top: 18%;
+    left: 50%;
+    background: rgba(8, 34, 18, 0.94);
+    border: 2px solid #7fffa8;
+    border-radius: 18px;
+    padding: 22px 28px;
+    color: #e5ffdf;
+    text-align: center;
+    z-index: 200;
+    box-shadow: 0 0 44px rgba(127,255,168,0.45), 0 10px 28px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.1);
+    pointer-events: none;
+    animation: depositToast 1.9s cubic-bezier(0.2, 1.3, 0.4, 1) forwards;
+    opacity: 0;
+    max-width: 86vw;
+  }
+  .deposit-toast .check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #2ccf6a;
+    color: #062816;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    box-shadow: 0 0 16px rgba(127,255,168,0.7);
+  }
+  .deposit-toast .title {
+    font-weight: bold;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
+  }
+  .deposit-toast .subtitle {
+    font-size: 13px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+  @keyframes depositToast {
+    0%   { opacity: 0; transform: translate(-50%, 24px) scale(0.75); }
+    14%  { opacity: 1; transform: translate(-50%, 0) scale(1.06); }
+    22%  { transform: translate(-50%, 0) scale(1); }
+    78%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); }
+  }
+
   /* Tap animation */
   .tap-flash {
     position: fixed;
@@ -772,6 +823,16 @@
 
       setMessage(`+${REFILL_AMOUNT}💧 Карточка MasterRoach принята 🪳✓`);
       playConfirmBeep();
+
+      const toast = document.createElement('div');
+      toast.className = 'deposit-toast';
+      toast.innerHTML = `
+        <span class="check">✓</span>
+        <div class="title">Водяной додеп прошёл успешно</div>
+        <div class="subtitle">+${REFILL_AMOUNT}💧 на счёт</div>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 1950);
 
       const flash = document.createElement('div');
       flash.className = 'tap-flash';
