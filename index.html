@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тараканье Казино 🚽</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, #3a2a1a 0%, #1a0f08 100%);
+    color: #e8d9c0;
+    overflow: hidden;
+    user-select: none;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: clamp(22px, 5vw, 36px);
+    text-shadow: 0 2px 8px #000, 0 0 20px #ffb347;
+    color: #ffd38a;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-bottom: 12px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .water-gauge {
+    background: linear-gradient(180deg, #0a2540, #051a30);
+    border: 2px solid #3a6ea5;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #9fd8ff;
+    box-shadow: inset 0 0 12px #0a3a70, 0 2px 6px #000;
+    min-width: 140px;
+    text-align: center;
+  }
+  .water-gauge.low { color: #ff7a7a; border-color: #a53a3a; animation: blink 0.8s infinite; }
+  @keyframes blink { 50% { opacity: 0.5; } }
+
+  .masterroach {
+    background: linear-gradient(135deg, #8b0000 0%, #d2691e 50%, #ffa500 100%);
+    border: 2px solid #2a1a0a;
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
+    transition: transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .masterroach::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine { to { left: 100%; } }
+  .masterroach:hover { transform: translateY(-2px); }
+  .masterroach:active { transform: translateY(1px); }
+  .masterroach .chip {
+    width: 22px; height: 16px;
+    background: linear-gradient(135deg, #ffd700, #b8860b);
+    border-radius: 3px;
+    border: 1px solid #2a1a0a;
+  }
+
+  .toilet {
+    position: relative;
+    width: min(420px, 92vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Tank with reels */
+  .tank {
+    width: 100%;
+    background: linear-gradient(180deg, #e8e4dc 0%, #c8c0b0 100%);
+    border-radius: 14px 14px 6px 6px;
+    padding: 18px 18px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.4);
+    border: 3px solid #8a8070;
+    position: relative;
+    z-index: 2;
+  }
+  .tank-title {
+    text-align: center;
+    color: #3a2a1a;
+    font-size: 11px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    opacity: 0.6;
+  }
+  .reels {
+    display: flex;
+    gap: 6px;
+    background: #1a0f08;
+    padding: 8px;
+    border-radius: 10px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.8);
+    border: 2px solid #5a4030;
+  }
+  .reel {
+    flex: 1;
+    aspect-ratio: 1 / 1.2;
+    background: linear-gradient(180deg, #fff8e8, #d8c8a8);
+    border-radius: 6px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    overflow: hidden;
+    position: relative;
+  }
+  .reel-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .reel-inner > div {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(32px, 10vw, 56px);
+    line-height: 1;
+  }
+
+  /* Flush button (lever) */
+  .flush-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+  .flush-btn {
+    background: linear-gradient(180deg, #c0c0c0 0%, #707070 100%);
+    border: 2px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 10px 22px;
+    color: #1a0f08;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #404040, 0 6px 12px rgba(0,0,0,0.5);
+    transition: transform 0.08s, box-shadow 0.08s;
+    letter-spacing: 2px;
+  }
+  .flush-btn:hover:not(:disabled) { filter: brightness(1.1); }
+  .flush-btn:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #404040, 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .flush-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Bowl */
+  .bowl {
+    width: 85%;
+    height: 180px;
+    background: linear-gradient(180deg, #f0ece4 0%, #d0c8b8 100%);
+    border: 3px solid #8a8070;
+    border-top: none;
+    border-radius: 0 0 45% 45% / 0 0 70% 70%;
+    margin-top: -4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    z-index: 1;
+  }
+  .water-bowl {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 40%;
+    bottom: 15%;
+    background: radial-gradient(ellipse at center, #6fb8e8 0%, #2a6a98 70%, #1a4068 100%);
+    border-radius: 50%;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .water-bowl.swirling::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.3), transparent, rgba(255,255,255,0.2), transparent);
+    animation: swirl 0.6s linear infinite;
+  }
+  @keyframes swirl {
+    to { transform: rotate(360deg); }
+  }
+
+  .bugs {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .bug {
+    position: absolute;
+    font-size: 28px;
+    animation: fall 1.4s ease-in forwards;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-220px) rotate(0deg); opacity: 1; }
+    70%  { transform: translateY(0) rotate(360deg); opacity: 1; }
+    85%  { transform: translateY(10px) rotate(380deg) scale(0.9); opacity: 0.8; }
+    100% { transform: translateY(40px) rotate(400deg) scale(0.3); opacity: 0; }
+  }
+
+  /* Floor */
+  .floor {
+    width: 90%;
+    height: 20px;
+    background: linear-gradient(180deg, #3a2a1a, #1a0f08);
+    border-radius: 50%;
+    margin-top: -10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+  }
+
+  .message {
+    margin-top: 16px;
+    min-height: 24px;
+    text-align: center;
+    font-size: 15px;
+    padding: 6px 14px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 8px;
+    max-width: 92vw;
+  }
+  .message.win { color: #ffd38a; text-shadow: 0 0 8px #ffb347; }
+  .message.jackpot { color: #ffea00; text-shadow: 0 0 14px #ffea00; animation: pulse 0.4s infinite alternate; font-weight: bold; font-size: 18px; }
+  @keyframes pulse { to { transform: scale(1.08); } }
+
+  .history {
+    margin-top: 10px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 92vw;
+    min-height: 28px;
+  }
+  .history-item {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 14px;
+  }
+
+  /* Tap animation */
+  .tap-flash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,180,80,0.3), transparent 40%);
+    pointer-events: none;
+    animation: flash 0.4s ease-out;
+    z-index: 100;
+  }
+  @keyframes flash {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  .paytable {
+    margin-top: 14px;
+    font-size: 11px;
+    opacity: 0.6;
+    text-align: center;
+    max-width: 92vw;
+  }
+  .paytable b { color: #ffd38a; }
+</style>
+</head>
+<body>
+  <h1>🚽 Тараканье Казино 🪳</h1>
+  <div class="subtitle">Смывай. Выигрывай. Тараканы сами придут.</div>
+
+  <div class="stats">
+    <div class="water-gauge" id="waterGauge">💧 <span id="water">100</span></div>
+    <button class="masterroach" id="masterroach">
+      <div class="chip"></div>
+      MasterRoach 🪳
+    </button>
+  </div>
+
+  <div class="toilet">
+    <div class="tank">
+      <div class="tank-title">— СЛИВНОЙ БАЧОК —</div>
+      <div class="reels">
+        <div class="reel"><div class="reel-inner" id="reel1"><div>🪳</div></div></div>
+        <div class="reel"><div class="reel-inner" id="reel2"><div>🪰</div></div></div>
+        <div class="reel"><div class="reel-inner" id="reel3"><div>🕷️</div></div></div>
+      </div>
+      <div class="flush-row">
+        <button class="flush-btn" id="flush">СМЫВ 🌊</button>
+      </div>
+    </div>
+    <div class="bowl">
+      <div class="water-bowl" id="waterBowl"></div>
+      <div class="bugs" id="bugs"></div>
+    </div>
+    <div class="floor"></div>
+  </div>
+
+  <div class="message" id="message">Приложите карточку MasterRoach, чтобы набрать воды 💧</div>
+  <div class="history" id="history"></div>
+
+  <div class="paytable">
+    Смыв: <b>10💧</b> · Пополнение: <b>+100💧</b><br>
+    3×🪳 ДЖЕКПОТ · 3×💩 мега-джекпот · 3×🪰/🕷️/🪲 средний · 3×🐛/🐜 мелкий
+  </div>
+
+<script>
+(() => {
+  const SYMBOLS = ['🪳', '🪰', '🕷️', '🪲', '🐛', '🐜', '💩'];
+  const REEL_STRIP_LEN = 20;
+  const FLUSH_COST = 10;
+  const REFILL_AMOUNT = 100;
+  const START_WATER = 100;
+
+  const PAYOUTS = {
+    '💩': { name: 'МЕГА-ДЖЕКПОТ!!!', bugs: 30, bugType: '🪳', mix: ['💩','🪳','🪰'], class: 'jackpot' },
+    '🪳': { name: 'ДЖЕКПОТ! Тараканий потоп!', bugs: 20, bugType: '🪳', class: 'jackpot' },
+    '🪰': { name: 'Мушиный рой!', bugs: 10, bugType: '🪰', class: 'win' },
+    '🕷️': { name: 'Паучий улов!', bugs: 8, bugType: '🕷️', class: 'win' },
+    '🪲': { name: 'Жуки полетели!', bugs: 8, bugType: '🪲', class: 'win' },
+    '🐛': { name: 'Червячки!', bugs: 5, bugType: '🐛', class: 'win' },
+    '🐜': { name: 'Муравьиный поход!', bugs: 5, bugType: '🐜', class: 'win' },
+  };
+
+  // Weights (lower = rarer). 💩 is the rarest mega-jackpot.
+  const WEIGHTS = {
+    '🪳': 3,
+    '🪰': 6,
+    '🕷️': 5,
+    '🪲': 5,
+    '🐛': 7,
+    '🐜': 7,
+    '💩': 1,
+  };
+
+  const state = {
+    water: START_WATER,
+    spinning: false,
+    history: [],
+  };
+
+  const $water = document.getElementById('water');
+  const $waterGauge = document.getElementById('waterGauge');
+  const $flush = document.getElementById('flush');
+  const $mastercard = document.getElementById('masterroach');
+  const $message = document.getElementById('message');
+  const $bugs = document.getElementById('bugs');
+  const $waterBowl = document.getElementById('waterBowl');
+  const $history = document.getElementById('history');
+  const reels = [
+    document.getElementById('reel1'),
+    document.getElementById('reel2'),
+    document.getElementById('reel3'),
+  ];
+
+  function updateWater() {
+    $water.textContent = state.water;
+    $waterGauge.classList.toggle('low', state.water < FLUSH_COST);
+    $flush.disabled = state.water < FLUSH_COST || state.spinning;
+  }
+
+  function setMessage(text, cls) {
+    $message.className = 'message' + (cls ? ' ' + cls : '');
+    $message.textContent = text;
+  }
+
+  function weightedPick() {
+    const entries = Object.entries(WEIGHTS);
+    const total = entries.reduce((s, [, w]) => s + w, 0);
+    let r = Math.random() * total;
+    for (const [sym, w] of entries) {
+      r -= w;
+      if (r <= 0) return sym;
+    }
+    return entries[0][0];
+  }
+
+  function buildStrip(finalSymbol) {
+    const strip = [];
+    for (let i = 0; i < REEL_STRIP_LEN - 1; i++) {
+      strip.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+    }
+    strip.push(finalSymbol);
+    return strip;
+  }
+
+  function renderReel(reelEl, symbols) {
+    const itemH = reelEl.parentElement.clientHeight;
+    reelEl.innerHTML = symbols
+      .map(s => `<div style="height:${itemH}px">${s}</div>`)
+      .join('');
+    return itemH;
+  }
+
+  function spinReel(reelEl, finalSymbol, duration) {
+    return new Promise(resolve => {
+      const strip = buildStrip(finalSymbol);
+      const itemH = renderReel(reelEl, strip);
+
+      reelEl.style.transition = 'none';
+      reelEl.style.transform = 'translateY(0)';
+      void reelEl.offsetHeight; // force reflow
+
+      const totalShift = itemH * (strip.length - 1);
+      reelEl.style.transition = `transform ${duration}ms cubic-bezier(0.2, 0.7, 0.3, 1)`;
+      reelEl.style.transform = `translateY(-${totalShift}px)`;
+
+      setTimeout(() => {
+        renderReel(reelEl, [finalSymbol]);
+        reelEl.style.transition = 'none';
+        reelEl.style.transform = 'translateY(0)';
+        resolve();
+      }, duration + 20);
+    });
+  }
+
+  function dropBug(symbol, delay, spread = 80) {
+    const bug = document.createElement('div');
+    bug.className = 'bug';
+    bug.textContent = symbol;
+    const leftPct = 50 + (Math.random() - 0.5) * spread;
+    bug.style.left = `${leftPct}%`;
+    bug.style.animationDelay = `${delay}ms`;
+    bug.style.fontSize = `${22 + Math.random() * 14}px`;
+    $bugs.appendChild(bug);
+    setTimeout(() => bug.remove(), 1600 + delay);
+  }
+
+  function dropOutcome(result) {
+    const [a, b, c] = result;
+    if (a === b && b === c) {
+      // Winning combo — drop a lot of bugs
+      const payout = PAYOUTS[a];
+      for (let i = 0; i < payout.bugs; i++) {
+        const type = payout.mix
+          ? payout.mix[Math.floor(Math.random() * payout.mix.length)]
+          : payout.bugType;
+        dropBug(type, i * 60, 70);
+      }
+    } else {
+      // No win. Sometimes a lone straggler still drops, mostly empty.
+      const uniqueCount = new Set(result).size;
+      if (uniqueCount === 2) {
+        // Two-of-a-kind: drop 1-2 of that symbol
+        const counts = {};
+        result.forEach(s => counts[s] = (counts[s] || 0) + 1);
+        const pair = Object.entries(counts).find(([, n]) => n === 2)[0];
+        const n = 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < n; i++) dropBug(pair, i * 150, 50);
+      } else if (Math.random() < 0.3) {
+        // Rare stray bug
+        dropBug(result[Math.floor(Math.random() * 3)], 0, 40);
+      }
+      // Otherwise empty flush
+    }
+  }
+
+  function addHistory(result) {
+    state.history.unshift(result.join(''));
+    if (state.history.length > 15) state.history.pop();
+    $history.innerHTML = state.history
+      .map(h => `<span class="history-item">${h}</span>`)
+      .join('');
+  }
+
+  async function flush() {
+    if (state.spinning || state.water < FLUSH_COST) return;
+
+    state.spinning = true;
+    state.water -= FLUSH_COST;
+    updateWater();
+    setMessage('Смываем... 🌊');
+    $waterBowl.classList.add('swirling');
+
+    // Play "flush" whoosh via WebAudio
+    playFlushSound();
+
+    // Decide outcome
+    const result = [weightedPick(), weightedPick(), weightedPick()];
+
+    // Spin reels with staggered stops
+    await Promise.all([
+      spinReel(reels[0], result[0], 900),
+      spinReel(reels[1], result[1], 1300),
+      spinReel(reels[2], result[2], 1700),
+    ]);
+
+    // Resolve outcome
+    const [a, b, c] = result;
+    if (a === b && b === c) {
+      const payout = PAYOUTS[a];
+      setMessage(`${payout.name} ${a}${a}${a}`, payout.class);
+      playWinSound(payout.class === 'jackpot');
+    } else if (a === b || b === c || a === c) {
+      setMessage('Почти! Пара есть, но не три 🫠');
+    } else {
+      setMessage('Пустой смыв... вода утекла впустую 💸');
+    }
+
+    dropOutcome(result);
+    addHistory(result);
+
+    setTimeout(() => $waterBowl.classList.remove('swirling'), 1400);
+
+    state.spinning = false;
+    updateWater();
+
+    if (state.water < FLUSH_COST) {
+      setTimeout(() => {
+        if (state.water < FLUSH_COST) {
+          setMessage('Воды нет. Приложи MasterRoach 🪳💳');
+        }
+      }, 1600);
+    }
+  }
+
+  function tapMasterRoach() {
+    state.water += REFILL_AMOUNT;
+    updateWater();
+    setMessage(`+${REFILL_AMOUNT}💧 Карточка MasterRoach принята 🪳✓`);
+    const flash = document.createElement('div');
+    flash.className = 'tap-flash';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 400);
+    playTapSound();
+  }
+
+  // --- Sound (WebAudio, tiny & optional) ---
+  let audioCtx;
+  function ac() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { return null; }
+    }
+    return audioCtx;
+  }
+  function playFlushSound() {
+    const ctx = ac(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 1.5, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) * 0.5;
+    }
+    noise.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2000, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + 1.4);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+    noise.connect(filter).connect(gain).connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 1.5);
+  }
+  function playWinSound(big) {
+    const ctx = ac(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const notes = big ? [523, 659, 784, 1047, 1319] : [523, 659, 784];
+    notes.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.0001, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.2, now + i * 0.12 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.25);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.3);
+    });
+  }
+  function playTapSound() {
+    const ctx = ac(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(1800, now + 0.05);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  }
+
+  $flush.addEventListener('click', flush);
+  $mastercard.addEventListener('click', tapMasterRoach);
+
+  // Keyboard: Space = flush, R = refill
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); flush(); }
+    else if (e.code === 'KeyR') { tapMasterRoach(); }
+  });
+
+  // Initial reel render (set proper height for symbols)
+  function initReels() {
+    const initial = ['🪳', '🪰', '🕷️'];
+    reels.forEach((r, i) => renderReel(r, [initial[i]]));
+  }
+  initReels();
+  window.addEventListener('resize', initReels);
+
+  updateWater();
+})();
+</script>
+</body>
+</html>
