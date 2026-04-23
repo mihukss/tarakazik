@@ -720,6 +720,29 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
+
+  // iOS/Safari: unlock WebAudio on the very first user interaction by
+  // playing a silent buffer INSIDE the gesture. Without this, audio calls
+  // made later (e.g. from setTimeout) stay silent because the context
+  // never fully transitions to 'running'.
+  function unlockAudio() {
+    const ctx = ac(); if (!ctx) return;
+    try {
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (e) {}
+    window.removeEventListener('touchstart', unlockAudio);
+    window.removeEventListener('touchend', unlockAudio);
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('keydown', unlockAudio);
+  }
+  window.addEventListener('touchstart', unlockAudio, { passive: true });
+  window.addEventListener('touchend', unlockAudio, { passive: true });
+  window.addEventListener('click', unlockAudio, { passive: true });
+  window.addEventListener('keydown', unlockAudio, { passive: true });
   function playFlushSound() {
     const ctx = ac(); if (!ctx) return;
     const now = ctx.currentTime;
