@@ -211,32 +211,58 @@
     line-height: 1;
   }
 
-  /* Flush button (lever) */
+  /* Flush buttons — dual-flush like a real toilet */
   .flush-row {
     display: flex;
     justify-content: flex-end;
+    align-items: flex-end;
+    gap: 8px;
     margin-top: 10px;
   }
   .flush-btn {
     background: linear-gradient(180deg, #c0c0c0 0%, #707070 100%);
     border: 2px solid #2a2a2a;
-    border-radius: 8px;
-    padding: 10px 22px;
+    border-radius: 10px;
     color: #1a0f08;
     font-weight: bold;
-    font-size: 16px;
     cursor: pointer;
     box-shadow: 0 4px 0 #404040, 0 6px 12px rgba(0,0,0,0.5);
-    transition: transform 0.08s, box-shadow 0.08s;
+    transition: transform 0.08s, box-shadow 0.08s, filter 0.1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+  }
+  .flush-btn.small {
+    padding: 8px 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .flush-btn.big {
+    padding: 12px 26px;
+    font-size: 15px;
     letter-spacing: 2px;
+    background: linear-gradient(180deg, #d8d8d8 0%, #606060 100%);
+    box-shadow: 0 5px 0 #353535, 0 8px 16px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .flush-btn .flush-cost {
+    font-size: 0.85em;
+    opacity: 0.75;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-top: 2px;
   }
   .flush-btn:hover:not(:disabled) { filter: brightness(1.1); }
-  .flush-btn:active:not(:disabled) {
+  .flush-btn.small:active:not(:disabled) {
     transform: translateY(3px);
     box-shadow: 0 1px 0 #404040, 0 2px 6px rgba(0,0,0,0.5);
   }
+  .flush-btn.big:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #353535, 0 3px 8px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
   .flush-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 
@@ -393,7 +419,14 @@
         <div class="reel"><div class="reel-inner" id="reel3"><div>🕷️</div></div></div>
       </div>
       <div class="flush-row">
-        <button class="flush-btn" id="flush">СМЫВ 🌊</button>
+        <button class="flush-btn small" id="flush">
+          <span>МАЛЫЙ</span>
+          <span class="flush-cost">10💧</span>
+        </button>
+        <button class="flush-btn big" id="flushBig">
+          <span>БОЛЬШОЙ 🌊</span>
+          <span class="flush-cost">25💧 · шансы↑</span>
+        </button>
       </div>
     </div>
     <div class="bowl">
@@ -407,17 +440,20 @@
   <div class="history" id="history"></div>
 
   <div class="paytable">
-    Смыв: <b>10💧</b> · Пополнение: <b>+100💧</b><br>
-    3×🪳 ДЖЕКПОТ · 3×💩 мега-джекпот · 3×🪰/🕷️/🪲 средний · 3×🐛/🐜 мелкий
+    Малый: <b>10💧</b> · Большой: <b>25💧</b> (шансы выше) · Пополнение: <b>+100💧</b><br>
+    3×🪳 ДЖЕКПОТ · 3×💩 мега-джекпот · 3×🪰/🕷️/🪲 средний · 3×🐛/🐜 мелкий · 3×💦 возврат воды
   </div>
 
 <script>
 (() => {
-  const SYMBOLS = ['🪳', '🪰', '🕷️', '🪲', '🐛', '🐜', '💩'];
+  const SYMBOLS = ['🪳', '🪰', '🕷️', '🪲', '🐛', '🐜', '💩', '💦'];
   const REEL_STRIP_LEN = 20;
   const FLUSH_COST = 10;
+  const BIG_FLUSH_COST = 25;
   const REFILL_AMOUNT = 100;
   const START_WATER = 100;
+  // On a big flush, this much of an extra chance to force a 3-of-a-kind win
+  const BIG_FORCE_WIN_CHANCE = 0.32;
 
   const PAYOUTS = {
     '💩': { name: 'МЕГА-ДЖЕКПОТ!!!', bugs: 30, bugType: '🪳', mix: ['💩','🪳','🪰'], class: 'jackpot' },
@@ -427,9 +463,10 @@
     '🪲': { name: 'Жуки полетели!', bugs: 8, bugType: '🪲', class: 'win' },
     '🐛': { name: 'Червячки!', bugs: 5, bugType: '🐛', class: 'win' },
     '🐜': { name: 'Муравьиный поход!', bugs: 5, bugType: '🐜', class: 'win' },
+    '💦': { name: 'Чистый смыв! Вода вернулась 💦', bugs: 6, bugType: '💦', class: 'win', refund: 30 },
   };
 
-  // Weights (lower = rarer). 💩 is the rarest mega-jackpot.
+  // Default weights (lower = rarer). 💩 is the rarest mega-jackpot.
   const WEIGHTS = {
     '🪳': 3,
     '🪰': 6,
@@ -438,6 +475,21 @@
     '🐛': 7,
     '🐜': 7,
     '💩': 1,
+    '💦': 6,
+  };
+
+  // Big-flush weights: rare symbols get a big boost; big flush also has
+  // a BIG_FORCE_WIN_CHANCE to outright lock all three reels to the same
+  // weighted symbol, so the odds of any 3-of-a-kind go way up.
+  const BIG_WEIGHTS = {
+    '🪳': 8,
+    '🪰': 7,
+    '🕷️': 6,
+    '🪲': 6,
+    '🐛': 5,
+    '🐜': 5,
+    '💩': 3,
+    '💦': 6,
   };
 
   const state = {
@@ -449,6 +501,7 @@
   const $water = document.getElementById('water');
   const $waterGauge = document.getElementById('waterGauge');
   const $flush = document.getElementById('flush');
+  const $flushBig = document.getElementById('flushBig');
   const $mastercard = document.getElementById('masterroach');
   const $message = document.getElementById('message');
   const $bugs = document.getElementById('bugs');
@@ -463,7 +516,8 @@
   function updateWater() {
     $water.textContent = state.water;
     $waterGauge.classList.toggle('low', state.water < FLUSH_COST);
-    $flush.disabled = state.water < FLUSH_COST || state.spinning;
+    $flush.disabled    = state.water < FLUSH_COST     || state.spinning;
+    $flushBig.disabled = state.water < BIG_FLUSH_COST || state.spinning;
   }
 
   function setMessage(text, cls) {
@@ -471,8 +525,8 @@
     $message.textContent = text;
   }
 
-  function weightedPick() {
-    const entries = Object.entries(WEIGHTS);
+  function weightedPick(weights) {
+    const entries = Object.entries(weights);
     const total = entries.reduce((s, [, w]) => s + w, 0);
     let r = Math.random() * total;
     for (const [sym, w] of entries) {
@@ -480,6 +534,17 @@
       if (r <= 0) return sym;
     }
     return entries[0][0];
+  }
+
+  function generateResult(mode) {
+    if (mode === 'big') {
+      if (Math.random() < BIG_FORCE_WIN_CHANCE) {
+        const s = weightedPick(BIG_WEIGHTS);
+        return [s, s, s];
+      }
+      return [weightedPick(BIG_WEIGHTS), weightedPick(BIG_WEIGHTS), weightedPick(BIG_WEIGHTS)];
+    }
+    return [weightedPick(WEIGHTS), weightedPick(WEIGHTS), weightedPick(WEIGHTS)];
   }
 
   function buildStrip(finalSymbol) {
@@ -606,21 +671,22 @@
       .join('');
   }
 
-  async function flush() {
-    if (state.spinning || state.water < FLUSH_COST) return;
+  async function flush(mode = 'small') {
+    const cost = mode === 'big' ? BIG_FLUSH_COST : FLUSH_COST;
+    if (state.spinning || state.water < cost) return;
 
     state.spinning = true;
-    state.water -= FLUSH_COST;
+    state.water -= cost;
     updateWater();
-    setMessage('Смываем... 🌊');
+    setMessage(mode === 'big' ? 'БОЛЬШОЙ смыв... 🌊🌊' : 'Смываем... 🌊');
     $waterBowl.classList.add('swirling');
     flushFloatingBugs();
 
     // Play "flush" whoosh via WebAudio
-    playFlushSound();
+    playFlushSound(mode === 'big');
 
     // Decide outcome
-    const result = [weightedPick(), weightedPick(), weightedPick()];
+    const result = generateResult(mode);
 
     // Spin reels with staggered stops
     await Promise.all([
@@ -635,6 +701,10 @@
       const payout = PAYOUTS[a];
       setMessage(`${payout.name} ${a}${a}${a}`, payout.class);
       playWinSound(payout.class === 'jackpot');
+      if (payout.refund) {
+        state.water += payout.refund;
+        updateWater();
+      }
     } else if (a === b || b === c || a === c) {
       setMessage('Почти! Пара есть, но не три 🫠');
     } else {
@@ -743,11 +813,13 @@
   window.addEventListener('touchend', unlockAudio, { passive: true });
   window.addEventListener('click', unlockAudio, { passive: true });
   window.addEventListener('keydown', unlockAudio, { passive: true });
-  function playFlushSound() {
+  function playFlushSound(big) {
     const ctx = ac(); if (!ctx) return;
     const now = ctx.currentTime;
+    const dur = big ? 2.2 : 1.5;
+    const peakVol = big ? 0.38 : 0.25;
     const noise = ctx.createBufferSource();
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 1.5, ctx.sampleRate);
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
     const data = buf.getChannelData(0);
     for (let i = 0; i < data.length; i++) {
       data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) * 0.5;
@@ -755,14 +827,14 @@
     noise.buffer = buf;
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2000, now);
-    filter.frequency.exponentialRampToValueAtTime(300, now + 1.4);
+    filter.frequency.setValueAtTime(big ? 2600 : 2000, now);
+    filter.frequency.exponentialRampToValueAtTime(big ? 220 : 300, now + dur - 0.1);
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+    gain.gain.setValueAtTime(peakVol, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
     noise.connect(filter).connect(gain).connect(ctx.destination);
     noise.start(now);
-    noise.stop(now + 1.5);
+    noise.stop(now + dur);
   }
   function playWinSound(big) {
     const ctx = ac(); if (!ctx) return;
@@ -830,12 +902,14 @@
     sparkle.stop(now + 0.28);
   }
 
-  $flush.addEventListener('click', flush);
+  $flush.addEventListener('click', () => flush('small'));
+  $flushBig.addEventListener('click', () => flush('big'));
   $mastercard.addEventListener('click', tapMasterRoach);
 
-  // Keyboard: Space = flush, R = refill
+  // Keyboard: Space = small flush, Enter = big flush, R = refill
   window.addEventListener('keydown', e => {
-    if (e.code === 'Space') { e.preventDefault(); flush(); }
+    if (e.code === 'Space') { e.preventDefault(); flush('small'); }
+    else if (e.code === 'Enter') { e.preventDefault(); flush('big'); }
     else if (e.code === 'KeyR') { tapMasterRoach(); }
   });
 
