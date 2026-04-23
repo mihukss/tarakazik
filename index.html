@@ -2,26 +2,30 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Тараканье Казино 🚽</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
-    height: 100%;
+    min-height: 100%;
     font-family: 'Segoe UI', system-ui, sans-serif;
     background: radial-gradient(ellipse at top, #3a2a1a 0%, #1a0f08 100%);
     color: #e8d9c0;
-    overflow: hidden;
     user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
   }
   body {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 12px;
+    padding: calc(10px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));
+    min-height: 100svh;
     min-height: 100vh;
+    overflow-x: hidden;
   }
+  button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   h1 {
     font-size: clamp(22px, 5vw, 36px);
     text-shadow: 0 2px 8px #000, 0 0 20px #ffb347;
@@ -54,9 +58,35 @@
     box-shadow: inset 0 0 12px #0a3a70, 0 2px 6px #000;
     min-width: 140px;
     text-align: center;
+    position: relative;
   }
   .water-gauge.low { color: #ff7a7a; border-color: #a53a3a; animation: blink 0.8s infinite; }
   @keyframes blink { 50% { opacity: 0.5; } }
+  .water-gauge.refilling {
+    animation: gaugeRefill 0.65s ease-out;
+  }
+  @keyframes gaugeRefill {
+    0%   { border-color: #3a6ea5; box-shadow: inset 0 0 12px #0a3a70, 0 2px 6px #000; }
+    35%  { border-color: #7fffa8; box-shadow: inset 0 0 26px #3affa0, 0 0 22px rgba(127,255,168,0.7), 0 2px 6px #000; transform: scale(1.05); }
+    100% { border-color: #3a6ea5; box-shadow: inset 0 0 12px #0a3a70, 0 2px 6px #000; transform: scale(1); }
+  }
+  .refill-float {
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    color: #7fffa8;
+    font-weight: bold;
+    font-size: 18px;
+    text-shadow: 0 0 8px #3affa0, 0 1px 2px #000;
+    pointer-events: none;
+    animation: refillFloat 1.2s ease-out forwards;
+    white-space: nowrap;
+  }
+  @keyframes refillFloat {
+    0%   { transform: translate(-50%, 8px); opacity: 0; }
+    15%  { transform: translate(-50%, -4px); opacity: 1; }
+    100% { transform: translate(-50%, -56px); opacity: 0; }
+  }
 
   .masterroach {
     background: linear-gradient(135deg, #8b0000 0%, #d2691e 50%, #ffa500 100%);
@@ -86,6 +116,31 @@
   @keyframes shine { to { left: 100%; } }
   .masterroach:hover { transform: translateY(-2px); }
   .masterroach:active { transform: translateY(1px); }
+  .masterroach.tapping {
+    animation: cardTap 0.6s cubic-bezier(0.3, 0.8, 0.4, 1);
+    pointer-events: none;
+  }
+  @keyframes cardTap {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); }
+    25%  { transform: translateY(8px) rotate(-4deg) scale(0.96); box-shadow: 0 1px 4px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2), 0 0 20px rgba(127,255,168,0.5); }
+    50%  { transform: translateY(10px) rotate(-5deg) scale(0.95); box-shadow: 0 1px 4px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2), 0 0 28px rgba(127,255,168,0.8); }
+    100% { transform: translateY(0) rotate(0deg) scale(1); }
+  }
+  .nfc-wave {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(127, 255, 168, 0.9);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: nfcWave 0.85s ease-out forwards;
+  }
+  @keyframes nfcWave {
+    0%   { width: 12px; height: 12px; opacity: 0; border-width: 3px; }
+    15%  { opacity: 0.9; }
+    100% { width: 160px; height: 160px; opacity: 0; border-width: 1px; }
+  }
   .masterroach .chip {
     width: 22px; height: 16px;
     background: linear-gradient(135deg, #ffd700, #b8860b);
@@ -95,7 +150,7 @@
 
   .toilet {
     position: relative;
-    width: min(420px, 92vw);
+    width: min(560px, 96vw);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -187,8 +242,8 @@
 
   /* Bowl */
   .bowl {
-    width: 85%;
-    height: 180px;
+    width: 92%;
+    height: clamp(190px, 48vw, 260px);
     background: linear-gradient(180deg, #f0ece4 0%, #d0c8b8 100%);
     border: 3px solid #8a8070;
     border-top: none;
@@ -228,15 +283,29 @@
   }
   .bug {
     position: absolute;
-    font-size: 28px;
-    animation: fall 1.4s ease-in forwards;
+    font-size: 52px;
+    animation: fall 2.8s ease-in both;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+    --landY: 120px;
   }
   @keyframes fall {
-    0%   { transform: translateY(-220px) rotate(0deg); opacity: 1; }
-    70%  { transform: translateY(0) rotate(360deg); opacity: 1; }
-    85%  { transform: translateY(10px) rotate(380deg) scale(0.9); opacity: 0.8; }
-    100% { transform: translateY(40px) rotate(400deg) scale(0.3); opacity: 0; }
+    0%   { transform: translateY(-300px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(var(--landY)) rotate(calc(var(--bobRot, 0deg) + 360deg)); opacity: 1; }
+  }
+  .bug.floating {
+    animation: bugFloat 3.2s ease-in-out infinite both;
+    animation-delay: var(--bobDelay, 0s);
+  }
+  @keyframes bugFloat {
+    0%, 100% { transform: translateY(var(--landY)) rotate(var(--bobRot, 0deg)); }
+    50%      { transform: translateY(calc(var(--landY) - 5px)) rotate(calc(var(--bobRot, 0deg) + 10deg)); }
+  }
+  .bug.flushing {
+    animation: flushOut 1.3s cubic-bezier(0.4, 0.2, 0.6, 1) both;
+  }
+  @keyframes flushOut {
+    0%   { transform: translateY(var(--landY)) rotate(var(--bobRot, 0deg)) scale(1); opacity: 1; }
+    100% { transform: translateY(calc(var(--landY) + 60px)) rotate(900deg) scale(0.12); opacity: 0; }
   }
 
   /* Floor */
@@ -304,7 +373,7 @@
 </style>
 </head>
 <body>
-  <h1>🚽 Тараканье Казино 🪳</h1>
+  <h1>🚽 Тараказик 🪳</h1>
   <div class="subtitle">Смывай. Выигрывай. Тараканы сами придут.</div>
 
   <div class="stats">
@@ -452,6 +521,8 @@
     });
   }
 
+  const floatingBugs = [];
+
   function dropBug(symbol, delay, spread = 80) {
     const bug = document.createElement('div');
     bug.className = 'bug';
@@ -459,9 +530,43 @@
     const leftPct = 50 + (Math.random() - 0.5) * spread;
     bug.style.left = `${leftPct}%`;
     bug.style.animationDelay = `${delay}ms`;
-    bug.style.fontSize = `${22 + Math.random() * 14}px`;
+    // Scale bug size to bowl size so mobile stays proportional
+    const bowlH = $bugs.clientHeight || 260;
+    const sizeScale = Math.min(1, bowlH / 260);
+    bug.style.fontSize = `${(42 + Math.random() * 22) * sizeScale}px`;
+    // Land on the water band (roughly 38-70% of bowl height)
+    const landY = bowlH * 0.38 + Math.random() * bowlH * 0.3;
+    bug.style.setProperty('--landY', `${landY}px`);
+    bug.style.setProperty('--bobDelay', `${(Math.random() * 2).toFixed(2)}s`);
+    bug.style.setProperty('--bobRot', `${((Math.random() - 0.5) * 40).toFixed(1)}deg`);
     $bugs.appendChild(bug);
-    setTimeout(() => bug.remove(), 1600 + delay);
+    floatingBugs.push(bug);
+
+    // Swap to floating animation once the fall completes
+    setTimeout(() => {
+      if (!bug.isConnected) return;
+      bug.style.animationDelay = '';
+      bug.classList.add('floating');
+    }, 2800 + delay + 20);
+  }
+
+  function flushFloatingBugs() {
+    const toFlush = [];
+    const remaining = [];
+    for (const bug of floatingBugs) {
+      if (!bug.isConnected) continue;
+      if (bug.classList.contains('floating')) toFlush.push(bug);
+      else remaining.push(bug); // still mid-fall, let it land and stay
+    }
+    floatingBugs.length = 0;
+    floatingBugs.push(...remaining);
+
+    toFlush.forEach((bug, i) => {
+      bug.classList.remove('floating');
+      bug.style.animationDelay = `${i * 30}ms`;
+      bug.classList.add('flushing');
+      setTimeout(() => bug.remove(), 1350 + i * 30);
+    });
   }
 
   function dropOutcome(result) {
@@ -509,6 +614,7 @@
     updateWater();
     setMessage('Смываем... 🌊');
     $waterBowl.classList.add('swirling');
+    flushFloatingBugs();
 
     // Play "flush" whoosh via WebAudio
     playFlushSound();
@@ -553,14 +659,55 @@
   }
 
   function tapMasterRoach() {
-    state.water += REFILL_AMOUNT;
-    updateWater();
-    setMessage(`+${REFILL_AMOUNT}💧 Карточка MasterRoach принята 🪳✓`);
-    const flash = document.createElement('div');
-    flash.className = 'tap-flash';
-    document.body.appendChild(flash);
-    setTimeout(() => flash.remove(), 400);
+    if ($mastercard.classList.contains('tapping')) return;
+
+    $mastercard.classList.add('tapping');
+    setTimeout(() => $mastercard.classList.remove('tapping'), 620);
+
+    // NFC waves radiating from the card
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        const wave = document.createElement('div');
+        wave.className = 'nfc-wave';
+        $mastercard.appendChild(wave);
+        setTimeout(() => wave.remove(), 880);
+      }, 80 + i * 130);
+    }
+
     playTapSound();
+
+    // Terminal confirms after the card "lands"
+    setTimeout(() => {
+      $waterGauge.classList.add('refilling');
+      setTimeout(() => $waterGauge.classList.remove('refilling'), 680);
+
+      // Count water up smoothly
+      const start = state.water;
+      const end = start + REFILL_AMOUNT;
+      const dur = 520;
+      const t0 = performance.now();
+      (function tick(now) {
+        const p = Math.min(1, ((now || performance.now()) - t0) / dur);
+        state.water = Math.round(start + (end - start) * p);
+        updateWater();
+        if (p < 1) requestAnimationFrame(tick);
+        else { state.water = end; updateWater(); }
+      })();
+
+      const float = document.createElement('div');
+      float.className = 'refill-float';
+      float.textContent = `+${REFILL_AMOUNT}💧`;
+      $waterGauge.appendChild(float);
+      setTimeout(() => float.remove(), 1250);
+
+      setMessage(`+${REFILL_AMOUNT}💧 Карточка MasterRoach принята 🪳✓`);
+      playConfirmBeep();
+
+      const flash = document.createElement('div');
+      flash.className = 'tap-flash';
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 400);
+    }, 280);
   }
 
   // --- Sound (WebAudio, tiny & optional) ---
@@ -570,6 +717,7 @@
       try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
       catch (e) { return null; }
     }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     return audioCtx;
   }
   function playFlushSound() {
@@ -623,6 +771,40 @@
     osc.connect(gain).connect(ctx.destination);
     osc.start(now);
     osc.stop(now + 0.12);
+  }
+  function playConfirmBeep() {
+    const ctx = ac(); if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Apple Pay-style success chime: two ascending bell tones + a sparkle
+    const tones = [
+      { freq: 987.77,  start: 0.00, dur: 0.22, gain: 0.28 }, // B5
+      { freq: 1318.51, start: 0.07, dur: 0.28, gain: 0.28 }, // E6
+    ];
+    tones.forEach(({ freq, start, dur, gain: g }) => {
+      const osc = ctx.createOscillator();
+      const gn = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gn.gain.setValueAtTime(0.0001, now + start);
+      gn.gain.exponentialRampToValueAtTime(g, now + start + 0.012);
+      gn.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+      osc.connect(gn).connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur + 0.05);
+    });
+
+    // High sparkle harmonic for that crystalline Apple Pay shimmer
+    const sparkle = ctx.createOscillator();
+    const sparkleGain = ctx.createGain();
+    sparkle.type = 'sine';
+    sparkle.frequency.value = 2637.02; // E7
+    sparkleGain.gain.setValueAtTime(0.0001, now + 0.07);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.09, now + 0.085);
+    sparkleGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    sparkle.connect(sparkleGain).connect(ctx.destination);
+    sparkle.start(now + 0.07);
+    sparkle.stop(now + 0.28);
   }
 
   $flush.addEventListener('click', flush);
